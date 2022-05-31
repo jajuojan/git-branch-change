@@ -1,0 +1,11 @@
+[package]
+name = "git-branch-change"
+version = "0.1.0"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/jajuojan/git-branch-change"
+edition = "2021"
+
+[dependencies]
+git2 = "0.14"
+
