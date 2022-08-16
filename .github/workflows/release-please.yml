@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-please:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Run release-please
         uses: GoogleCloudPlatform/release-please-action@v3.3.0
