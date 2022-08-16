@@ -7,5 +7,11 @@ repository = "https://github.com/jajuojan/git-branch-change"
 edition = "2021"
 
 [dependencies]
-git2 = "0.14"
+git2 = "0.15"
+console = "0.15.1"
 
+[dependencies.dialoguer]
+version = "0.10.1"
+features = ["fuzzy-select"]
+git = "https://github.com/jajuojan/dialoguer"
+branch = "git-branch-change_modifications"
