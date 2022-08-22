@@ -20,21 +20,22 @@ pub fn branch_to_string(
 
     let mut res: Vec<String> = vec![];
     for branch in branches {
-        // TODO: match by remote tracking instead of hash
         let matching_local_branches: Vec<&Branch> = secondary_branches
             .as_ref()
             .unwrap()
             .iter()
-            .filter(|b| b.commit_hash == branch.commit_hash)
+            .filter(
+                |b| matches!(b.upstream_branch_name.to_owned(), Some(x) if x==branch.short_name),
+            )
             .collect();
 
-        let mut name = remove_ref(&branch.name);
+        let mut name = remove_ref(&branch.short_name);
         let amount_of_matches = matching_local_branches.len();
 
         if amount_of_matches > 0 {
             name += " [";
             for (i, b) in (&matching_local_branches).iter().enumerate() {
-                name += &remove_ref(&b.name);
+                name += &remove_ref(&b.short_name);
                 if i < amount_of_matches - 1 {
                     name += ", ";
                 }
@@ -71,17 +72,20 @@ mod tests {
         assert_eq!(
             branch_to_string(
                 &vec![Branch {
+                    short_name: "origin/feature/issue-001".to_string(),
                     name: "refs/remotes/origin/feature/issue-001".to_string(),
                     commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
                     ..Default::default()
                 }],
                 &Some(vec![Branch {
+                    short_name: "my-local-branch".to_string(),
                     name: "refs/heads/my-local-branch".to_string(),
-                    commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
+                    commit_hash: "abcdefghijklmnopqrstuvx555234567890aa01".to_string(),
+                    upstream_branch_name: Some("origin/feature/issue-001".to_string()),
                     ..Default::default()
                 }])
             ),
-            vec!["remotes/origin/feature/issue-001 [my-local-branch]",]
+            vec!["origin/feature/issue-001 [my-local-branch]",]
         );
     }
 
@@ -90,24 +94,29 @@ mod tests {
         assert_eq!(
             branch_to_string(
                 &vec![Branch {
+                    short_name: "origin/feature/issue-001".to_string(),
                     name: "refs/remotes/origin/feature/issue-001".to_string(),
                     commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
                     ..Default::default()
                 }],
                 &Some(vec![
                     Branch {
+                        short_name: "my-local-branch".to_string(),
                         name: "refs/heads/my-local-branch".to_string(),
-                        commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
+                        commit_hash: "abcdefghijklmnoptyutuvxyz1234567890aa01".to_string(),
+                        upstream_branch_name: Some("origin/feature/issue-001".to_string()),
                         ..Default::default()
                     },
                     Branch {
+                        short_name: "feature/something".to_string(),
                         name: "refs/heads/feature/something".to_string(),
                         commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
+                        upstream_branch_name: Some("origin/feature/issue-001".to_string()),
                         ..Default::default()
                     }
                 ])
             ),
-            vec!["remotes/origin/feature/issue-001 [my-local-branch, feature/something]",]
+            vec!["origin/feature/issue-001 [my-local-branch, feature/something]",]
         );
     }
 
@@ -117,16 +126,19 @@ mod tests {
             branch_to_string(
                 &vec![
                     Branch {
+                        short_name: "origin/feature/issue-001".to_string(),
                         name: "refs/remotes/origin/feature/issue-001".to_string(),
-                        commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
+                        commit_hash: "abcdefghijklmno4680tuvxyz1234567890aa01".to_string(),
                         ..Default::default()
                     },
                     Branch {
+                        short_name: "origin/feature/issue-001_new".to_string(),
                         name: "refs/remotes/origin/feature/issue-001_new".to_string(),
-                        commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
+                        commit_hash: "abcdefghijklmno456stuvxyz1234567890aa01".to_string(),
                         ..Default::default()
                     },
                     Branch {
+                        short_name: "origin/feature/issue-002".to_string(),
                         name: "refs/remotes/origin/feature/issue-002".to_string(),
                         commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa02".to_string(),
                         ..Default::default()
@@ -134,26 +146,32 @@ mod tests {
                 ],
                 &Some(vec![
                     Branch {
+                        short_name: "should-not-match".to_string(),
                         name: "refs/heads/should-not-match".to_string(),
                         commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa09".to_string(),
+                        upstream_branch_name: None,
                         ..Default::default()
                     },
                     Branch {
+                        short_name: "my-local-branch".to_string(),
                         name: "refs/heads/my-local-branch".to_string(),
                         commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
+                        upstream_branch_name: Some("origin/feature/issue-001".to_string()),
                         ..Default::default()
                     },
                     Branch {
+                        short_name: "feature/something".to_string(),
                         name: "refs/heads/feature/something".to_string(),
                         commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
+                        upstream_branch_name: Some("origin/feature/issue-001".to_string()),
                         ..Default::default()
                     }
                 ])
             ),
             vec![
-                "remotes/origin/feature/issue-001 [my-local-branch, feature/something]",
-                "remotes/origin/feature/issue-001_new [my-local-branch, feature/something]",
-                "remotes/origin/feature/issue-002"
+                "origin/feature/issue-001 [my-local-branch, feature/something]",
+                "origin/feature/issue-001_new",
+                "origin/feature/issue-002"
             ],
         );
     }

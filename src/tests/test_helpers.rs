@@ -6,16 +6,19 @@ pub mod test_helpers {
     pub fn get_local_branches() -> Vec<Branch> {
         vec![
             Branch {
+                short_name: "feature/issue-001".to_string(),
                 name: "refs/feature/issue-001".to_string(),
                 commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa01".to_string(),
                 ..Default::default()
             },
             Branch {
+                short_name: "my-local-branch".to_string(),
                 name: "refs/my-local-branch".to_string(),
                 commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa02".to_string(),
                 ..Default::default()
             },
             Branch {
+                short_name: "abrefs/my-local-branch".to_string(),
                 name: "refs/abrefs/my-local-branch".to_string(),
                 commit_hash: "abcdefghijklmnopqrstuvxyz1234567890aa02".to_string(),
                 ..Default::default()
