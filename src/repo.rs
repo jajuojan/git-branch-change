@@ -1,16 +1,34 @@
 use std::path::Path;
 
-use git2::{BranchType, Oid, Reference, Repository};
+use git2::{Branch as RawBranch, BranchType as RawBranchType, Oid, Repository};
 
 pub struct Repo {
     pub raw_repo: Repository,
 }
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
+pub enum BranchType {
+    #[default]
+    Local,
+    Remote,
+}
+
+impl From<RawBranchType> for BranchType {
+    fn from(branch_type_raw: RawBranchType) -> Self {
+        match branch_type_raw {
+            RawBranchType::Local => BranchType::Local,
+            RawBranchType::Remote => BranchType::Remote,
+        }
+    }
+}
+
+#[derive(Default, Clone, Debug)]
 pub struct Branch {
+    pub short_name: String,
     pub name: String,
     pub commit_hash: String,
-    //pub branch_type: BranchTyp,
+    pub upstream_branch_name: Option<String>,
+    pub branch_type: BranchType,
 }
 
 impl Repo {
@@ -23,25 +41,6 @@ impl Repo {
         Self { raw_repo }
     }
 
-    // TODO: rework this after POC is working
-    fn get_branch_names(&self, filter: BranchType) -> Vec<String> {
-        let branches = self.raw_repo.branches(Some(filter)).unwrap();
-        let mut res = Vec::new();
-        for branch in branches {
-            let b = branch.unwrap().0.name().unwrap().unwrap().to_owned();
-            res.push(b);
-        }
-        res
-    }
-
-    fn reference_to_branch(&self, r: &Reference) -> Branch {
-        // TODO: Do proper error handling
-        Branch {
-            name: r.name().unwrap().to_string(),
-            commit_hash: r.target().unwrap().to_string(),
-        }
-    }
-
     fn get_branch_by_name(&self, branch_name: &str) -> Branch {
         let (object, reference) = self
             .raw_repo
@@ -52,36 +51,66 @@ impl Repo {
         Branch {
             name: reference.unwrap().name().unwrap().to_string(),
             commit_hash: object.id().to_string(),
+            ..Default::default()
         }
     }
 
-    pub fn get_local_branches(&self) -> Vec<Branch> {
-        let branches = self.get_branch_names(BranchType::Local);
+    fn branch_to_branch(&self, raw_branch: RawBranch, branch_type_raw: &RawBranchType) -> Branch {
+        let mut upstream_branch_name = None;
+        if raw_branch.upstream().is_ok() && raw_branch.upstream().unwrap().name().is_ok() {
+            upstream_branch_name = Some(
+                raw_branch
+                    .upstream()
+                    .unwrap()
+                    .name()
+                    .unwrap()
+                    .unwrap()
+                    .to_string(),
+            );
+        }
+
+        let short_name = (&raw_branch).name().unwrap().unwrap().to_string();
+        let r = (raw_branch).into_reference();
+        let commit_hash = if (&r).target().is_some() {
+            (&r).target().unwrap().to_string()
+        } else {
+            "".to_string()
+        };
+
+        Branch {
+            short_name,
+            upstream_branch_name,
+            commit_hash,
+            name: (&r).name().unwrap().to_string(),
+            branch_type: BranchType::from(*branch_type_raw),
+            ..Default::default()
+        }
+    }
+
+    fn get_branches(&self, branch_type: RawBranchType) -> Vec<Branch> {
+        let raw_branches = self.raw_repo.branches(Some(branch_type)).unwrap();
+        let branches: Vec<Branch> = raw_branches
+            .into_iter()
+            .map(|b| {
+                let (aa, _) = b.unwrap();
+                self.branch_to_branch(aa, &branch_type)
+            })
+            .collect();
         branches
-            .iter()
-            .map(|f| self.get_branch_by_name(&f))
-            .collect()
+    }
+
+    pub fn get_local_branches(&self) -> Vec<Branch> {
+        self.get_branches(RawBranchType::Local)
     }
 
     pub fn get_remote_branches(&self) -> Vec<Branch> {
-        let branches = self.get_branch_names(BranchType::Remote);
-        branches
-            .iter()
-            .map(|f| self.get_branch_by_name(&f))
-            .collect()
+        self.get_branches(RawBranchType::Remote)
     }
 
-    pub fn get_current_local_branch(&self) -> Branch {
+    /*pub fn get_current_local_branch(&self) -> Branch {
         let r = self.raw_repo.head().unwrap();
         self.reference_to_branch(&r)
-    }
-
-    pub fn get_matching_local_branches(&self, branch: &Branch) -> Vec<Branch> {
-        self.get_local_branches()
-            .into_iter()
-            .filter(|b| b.commit_hash == branch.commit_hash)
-            .collect::<Vec<Branch>>()
-    }
+    }*/
 
     pub fn checkout_branch(&self, branch: &Branch) {
         //TODO: do proper error handling
@@ -134,9 +163,9 @@ impl Repo {
         };
     }
 
-    pub fn get_status(&self) {
+    /*pub fn get_status(&self) {
         //TODO: implement
         let statuses = self.raw_repo.statuses(None).unwrap();
         //println!("{:?}", statuses.);
-    }
+    }*/
 }

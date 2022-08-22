@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'git-branch-change'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=git-branch-change",
+                    "--package=git-branch-change"
+                ],
+                "filter": {
+                    "name": "git-branch-change",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${env:HOME}/temp/example_repo"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'git-branch-change'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=git-branch-change",
+                    "--package=git-branch-change"
+                ],
+                "filter": {
+                    "name": "git-branch-change",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

@@ -1,43 +1,21 @@
 use std::env;
+mod formatters;
 mod repo;
 use console::Key;
 use console::Term;
 use dialoguer::{theme::ColorfulTheme, FuzzySelect};
+use formatters::branch_to_string;
 use repo::Branch;
+use repo::BranchType;
 use repo::Repo;
 
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum BranchType {
-    Local,
-    Remote,
-}
-
-fn branch_to_string(repo: &Repo, branches: &Vec<Branch>) -> Vec<String> {
-    //TODO: do cleanup
-    //TODO: do proper handling
-    let mut res: Vec<String> = vec![];
-    for b in branches {
-        let mut n = b.name.to_owned();
-
-        let local_matches: Vec<Branch> = repo
-            .get_matching_local_branches(b)
-            .into_iter()
-            .filter(|bb| bb.name != b.name)
-            .collect();
-
-        if local_matches.len() > 0 {
-            n += " [";
-            for i in local_matches {
-                n += &i.name.to_owned();
-                n += " ";
-            }
-            n += "]";
-        }
-
-        res.push(n);
+fn branch_to_string2(repo: &Repo, branches: &Vec<Branch>, branch_type: &BranchType) -> Vec<String> {
+    if *branch_type == BranchType::Local {
+        return branch_to_string(branches, &None);
     }
 
-    res
+    let local_branches: Vec<Branch> = repo.get_local_branches();
+    return branch_to_string(branches, &Some(local_branches));
 }
 
 fn main() -> std::io::Result<()> {
@@ -53,7 +31,7 @@ fn main() -> std::io::Result<()> {
     // TODO: how to handle several remotes?
     // TODO: test with submodules
 
-    let mut selected_branches = BranchType::Local;
+    let mut selected_branch_type = BranchType::Local;
     let mut branches = repo.get_local_branches();
     //TODO: also print matching local-name for remote if found
 
@@ -61,7 +39,7 @@ fn main() -> std::io::Result<()> {
         //TODO: print current branch
         //TODO: print local/remote info
         let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
-            .items(&branch_to_string(&repo, &branches))
+            .items(&branch_to_string2(&repo, &branches, &selected_branch_type))
             .default(0)
             .interact_on_opt(&Term::stderr())?;
 
@@ -71,8 +49,10 @@ fn main() -> std::io::Result<()> {
             //TODO: allow creating branches from tags (shift-tab?)
             Some(result) => match result.button {
                 Key::Enter => {
-                    // TODO: switch branch. pub fn checkout_tree(
-                    // TODO: or checkout new local branch. pub fn branch(
+                    // TODO: Track local / remote relation with tracking instead of hash
+                    // TODO: switch branch if already in local.
+                    // TODO: or checkout new local branch.
+                    // TODO: if several local branches, open new menu to select witch to checkout
                     // TODO: Check for existing branches
                     let branch = branches[result.selection.unwrap()].to_owned();
                     repo.checkout_branch(&branch);
@@ -84,13 +64,13 @@ fn main() -> std::io::Result<()> {
                     return Ok(());
                 }
                 Key::Tab | Key::BackTab => {
-                    if selected_branches == BranchType::Local {
+                    if selected_branch_type == BranchType::Local {
                         //TODO: some duplicates
                         branches = repo.get_remote_branches();
-                        selected_branches = BranchType::Remote;
+                        selected_branch_type = BranchType::Remote;
                     } else {
                         branches = repo.get_local_branches();
-                        selected_branches = BranchType::Local;
+                        selected_branch_type = BranchType::Local;
                     }
                 }
                 _ => {}
@@ -98,4 +78,9 @@ fn main() -> std::io::Result<()> {
             None => println!("TODO: none selected"),
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    pub mod test_helpers;
 }
