@@ -112,9 +112,32 @@ impl Repo {
         self.reference_to_branch(&r)
     }*/
 
-    pub fn checkout_branch(&self, branch: &Branch) {
+    fn checkout_local(&self, branch: &Branch) {
         //TODO: do proper error handling
-        //TODO: Check if we are checking out a remote branch vs local
+        //TODO: probably some unneeded redundancy, clean-up
+        let r11 = self.raw_repo.set_head(&branch.name);
+        match r11 {
+            Ok(_) => (),
+            Err(error) => panic!("TODO: set_head failed {:?}", error),
+        };
+
+        let r = self.raw_repo.checkout_head(None);
+        match r {
+            Ok(_) => (),
+            Err(error) => panic!("TODO: checkout_head failed {:?}", error),
+        };
+
+        let r5 = self.raw_repo.checkout_index(None, None);
+        match r5 {
+            Ok(_) => (),
+            Err(error) => panic!("TODO: checkout_index failed {:?}", error),
+        };
+    }
+
+    fn checkout_remote(&self, branch: &Branch) {}
+
+    fn branch_and_checkout_remote(&self, branch: &Branch) {
+        //TODO: do proper error handling
         //TODO: probably some unneeded redundancy, clean-up
 
         // TODO: handle other than origin
@@ -143,24 +166,15 @@ impl Repo {
             Err(error) => panic!("TODO: checkout_index failed {:?}", error),
         };
 
-        let b = self.get_branch_by_name(&new_branch_name);
-        let r11 = self.raw_repo.set_head(&b.name);
-        match r11 {
-            Ok(_) => (),
-            Err(error) => panic!("TODO: set_head failed {:?}", error),
-        };
+        let new_local_branch = self.get_branch_by_name(&new_branch_name);
+        self.checkout_local(&new_local_branch);
+    }
 
-        let r = self.raw_repo.checkout_head(None);
-        match r {
-            Ok(_) => (),
-            Err(error) => panic!("TODO: checkout_head failed {:?}", error),
-        };
-
-        let r5 = self.raw_repo.checkout_index(None, None);
-        match r5 {
-            Ok(_) => (),
-            Err(error) => panic!("TODO: checkout_index failed {:?}", error),
-        };
+    pub fn checkout_branch(&self, branch: &Branch) {
+        match branch.branch_type {
+            BranchType::Local => self.checkout_local(&branch),
+            BranchType::Remote => self.branch_and_checkout_remote(&branch),
+        }
     }
 
     /*pub fn get_status(&self) {
