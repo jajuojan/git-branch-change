@@ -104,6 +104,7 @@ impl Repo {
     }
 
     pub fn get_remote_branches(&self) -> Vec<Branch> {
+        //TODO: remove HEAD
         self.get_branches(RawBranchType::Remote)
     }
 
@@ -140,6 +141,7 @@ impl Repo {
         //TODO: do proper error handling
         //TODO: probably some unneeded redundancy, clean-up
 
+        // TODO: Check for existing branches
         // TODO: handle other than origin
         let new_branch_name = branch.name.replace("refs/remotes/origin/", "");
         //println!("{:?}, {:?}", branch.name, &new_branch_name);

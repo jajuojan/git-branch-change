@@ -49,23 +49,18 @@ fn main() -> std::io::Result<()> {
             //TODO: allow creating branches from tags (shift-tab?)
             Some(result) => match result.button {
                 Key::Enter => {
-                    // TODO: Track local / remote relation with tracking instead of hash
                     // TODO: switch branch if already in local.
                     // TODO: or checkout new local branch.
                     // TODO: if several local branches, open new menu to select witch to checkout
-                    // TODO: Check for existing branches
                     let branch = branches[result.selection.unwrap()].to_owned();
                     repo.checkout_branch(&branch);
                     return Ok(());
                 }
                 Key::Escape => {
-                    // Debug
-                    //println!("{:?}", repo.get_current_local_branch());
                     return Ok(());
                 }
                 Key::Tab | Key::BackTab => {
                     if selected_branch_type == BranchType::Local {
-                        //TODO: some duplicates
                         branches = repo.get_remote_branches();
                         selected_branch_type = BranchType::Remote;
                     } else {
