@@ -20,6 +20,7 @@ pub fn branch_to_string(
 
     let mut res: Vec<String> = vec![];
     for branch in branches {
+        //let b = re
         let matching_local_branches: Vec<&Branch> = secondary_branches
             .as_ref()
             .unwrap()
