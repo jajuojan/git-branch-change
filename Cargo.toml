@@ -7,7 +7,7 @@ repository = "https://github.com/jajuojan/git-branch-change"
 edition = "2021"
 
 [dependencies]
-git2 = "0.15"
+git2 = "0.17"
 console = "0.15.4"
 
 [dependencies.dialoguer]
