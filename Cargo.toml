@@ -1,17 +1,17 @@
 [package]
-name = "git-branch-change"
-version = "0.1.0"
+edition = "2021"
 license = "MIT"
+name = "git-branch-change"
 readme = "README.md"
 repository = "https://github.com/jajuojan/git-branch-change"
-edition = "2021"
+version = "0.1.0"
 
 [dependencies]
-git2 = "0.17"
 console = "0.15.7"
+git2 = "0.17"
 
 [dependencies.dialoguer]
-version = "0.10.1"
+branch = "git-branch-change_modifications"
 features = ["fuzzy-select"]
 git = "https://github.com/jajuojan/dialoguer"
-branch = "git-branch-change_modifications"
+version = "0.10.1"

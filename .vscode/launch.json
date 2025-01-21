@@ -20,7 +20,7 @@
                 }
             },
             "args": [],
-            "cwd": "${env:HOME}/temp/example_repo"
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",
